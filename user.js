@@ -96,11 +96,4 @@ User.prototype.createNewUser = function(userId, password, callback, args){
 	});
 }
 
-User.prototype.createStream = function(streamName, callback, args) {
-    var newStream = new Stream(false, streamName, this.userId, function(streamObj) {
-        console.log('created stream');
-        callback(streamObj, args);
-    });
-};
-
 module.exports = User;
