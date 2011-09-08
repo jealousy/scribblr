@@ -1,10 +1,8 @@
 var User = require('./user');
 var Stream = require('./stream');
-var Post = require('./post')
 
 var user = new User();
 var stream = new Stream();
-var post = new Post();
 
 var userId = "user1";
 var password = "password";

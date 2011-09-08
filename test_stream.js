@@ -1,8 +1,6 @@
 var User = require('./user');
-var Stream = require('./stream');
 
 var user = new User();
-var stream = new Stream();
 
 var userId = "user1";
 var password = "password";
@@ -16,12 +14,6 @@ user.login(userId,password, function(result){
 		user.addStream("nalinStream",userId, function(result){
 			if (result){
 				console.log("new streamId is: " + result);
-				
-				//find stream by streamId
-				stream.findByStreamId(result, function(result){
-					console.log("findByStreamId");
-					console.log(result);
-				});
 			}
 		});
 	}else{
