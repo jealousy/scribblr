@@ -2,6 +2,7 @@ var sys    = require('sys'),
     sqlite = require('sqlite'),
     _ = require('underscore'),
 	uuid = require('node-uuid');
+var Post = require('./post');
 
 
 function Stream() {
@@ -27,7 +28,7 @@ Stream.prototype = {
     },
 
     _findByStreamId: function(streamId, callback, args) {
-        var query = "SELECT stream_id, stream_name, user_id, posts, timestamp FROM stream WHERE " + 
+        var query = "SELECT stream_id, stream_name, user_id, timestamp FROM stream WHERE " + 
             "stream_id = ?";
 
         var db = new sqlite.Database();
@@ -53,7 +54,6 @@ Stream.prototype = {
 						result.streamId = res.stream_id;
 	                    result.streamName = res.stream_name;
 	                    result.userId = res.user_id;
-	                    result.posts = JSON.parse(res.posts);
 						result.timestamp = res.timestamp;
 						callback(result, args);
 					}
@@ -63,7 +63,7 @@ Stream.prototype = {
     },
 
 	_findByUserId: function(userId, callback, args) {
-        var query = "SELECT stream_id, stream_name, user_id, posts, timestamp FROM stream WHERE " + 
+        var query = "SELECT stream_id, stream_name, user_id, timestamp FROM stream WHERE " + 
             "user_id = ?";
 
         var db = new sqlite.Database();
@@ -79,7 +79,6 @@ Stream.prototype = {
                 if (error) {
                     throw error;
                 } else {
-                    //should only return one row
 					if (rows.length == 0)
 					{
 						callback(null);
@@ -91,7 +90,6 @@ Stream.prototype = {
 							r.streamId = res.stream_id;
 		                    r.streamName = res.stream_name;
 		                    r.userId = res.user_id;
-		                    r.posts = JSON.parse(res.posts);
 							r.timestamp = res.timestamp;
 							result.push(r);
 						}
@@ -129,27 +127,29 @@ Stream.prototype = {
     },*/
 }
 
-
+//not really used
 Stream.prototype.findByStreamId = function(streamId, callback, args){
 	this._findByStreamId(streamId, function(result){
 		callback(result);
 	});
 };
 
-/* not fixed yet, not working
-Stream.prototype.addPost = function(data, callback, args) {
+//add a post to a stream
+Stream.prototype.addPost = function(streamId, userId, data, callback, args) {
     //create the post object
-    var Post = require('./post');
-    var self = this;
-    var newPost = new Post(false, this.streamName, this.streamId, data, function(postObj) {
+	var post = new Post();
+	var id = uuid(); //create a UUID
+	post._create(id, streamId, userId, data, function(result){
+		callback(result); //return new postId
+	});
+};
 
-        self.posts.push(postObj.getPostId());
-        console.log(self.streamId);
-        self._update(function() {
-            callback(self, args);
-        });
-    });
-};*/
-
+//get posts in a steram
+Stream.prototype.getPostsByStreamId = function(streamId, callback, args){
+	var post = new Post();
+	post._findByStreamId(streamId, function(result){
+		callback(result);
+	});
+};
 
 module.exports = Stream;

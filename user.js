@@ -1,4 +1,5 @@
 var Stream = require('./stream');
+var Post = require('./post');
 var sys    = require('sys'),
     sqlite = require('sqlite'),
     _ = require('underscore'),
@@ -110,6 +111,14 @@ User.prototype.addStream = function(streamName,userId, callback, args){
 User.prototype.getStreamsByUserId = function(userId, callback, args){
 	var stream = new Stream();
 	stream._findByUserId(userId, function(result){
+		callback(result);
+	});
+};
+
+//get all posts created by a user
+User.prototype.getPostsByUserId = function(userId, callback, args){
+	var post = new Post();
+	post._findByUserId(userId, function(result){
 		callback(result);
 	});
 };
