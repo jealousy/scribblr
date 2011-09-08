@@ -1,7 +1,8 @@
 var Stream = require('./stream');
 var sys    = require('sys'),
     sqlite = require('sqlite'),
-    _ = require('underscore');
+    _ = require('underscore'),
+	uuid = require('node-uuid');
 
 function User() {
 
@@ -95,5 +96,22 @@ User.prototype.createNewUser = function(userId, password, callback, args){
 		callback(result);
 	});
 }
+
+//a user creates a stream
+User.prototype.addStream = function(streamName,userId, callback, args){
+	var stream = new Stream();
+	var id = uuid(); //create a UUID
+	stream._create(id, streamName, userId, function(result){
+		callback(result); //return new streamId
+	});
+};
+
+//get all streams created by a user
+User.prototype.getStreamsByUserId = function(userId, callback, args){
+	var stream = new Stream();
+	stream._findByUserId(userId, function(result){
+		callback(result);
+	});
+};
 
 module.exports = User;

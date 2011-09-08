@@ -129,21 +129,9 @@ Stream.prototype = {
     },*/
 }
 
-Stream.prototype.addStream = function(streamName,userId, callback, args){
-	var id = uuid(); //create a UUID
-	this._create(id, streamName, userId, function(result){
-		callback(result);
-	});
-};
 
 Stream.prototype.findByStreamId = function(streamId, callback, args){
 	this._findByStreamId(streamId, function(result){
-		callback(result);
-	});
-};
-
-Stream.prototype.findByUserId = function(userId, callback, args){
-	this._findByUserId(userId, function(result){
 		callback(result);
 	});
 };

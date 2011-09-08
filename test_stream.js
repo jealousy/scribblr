@@ -13,7 +13,7 @@ user.login(userId,password, function(result){
 		console.log("login successful");
 		
 		//add a stream
-		stream.addStream("nalinStream",userId, function(result){
+		user.addStream("nalinStream",userId, function(result){
 			if (result){
 				console.log("new streamId is: " + result);
 				
@@ -30,8 +30,8 @@ user.login(userId,password, function(result){
 });
 
 //find all streams by a user
-stream.findByUserId(userId, function(result){
-	console.log("findByUserID");
+user.getStreamsByUserId(userId, function(result){
+	console.log("getStreamsByUserId");
 	console.log(result);
 });
 
