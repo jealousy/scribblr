@@ -9,6 +9,8 @@ var user = new User(false, "JL", "pass", function(result){
 	}
 });
 
+
+//login
 var user = new User(true, "JL", "pass", function(result){
 	if (result){
 		console.log("login user successfully");

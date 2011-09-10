@@ -5,12 +5,27 @@ var sys    = require('sys'),
 var Post = require('./post');
 
 
-function Stream() {
+function Stream(load) {
+	if (load) {
+        this.streamId = arguments[1];
+        var callback   = arguments[2];
+        var args       = arguments[3];
+        // load from db
+        this._load(this.streamId,callback, args);
+    } else {
+        this.streamName = arguments[1];
+        this.userId     = arguments[2];
+        var callback   = arguments[3];
+        var args       = arguments[4];
+
+        //this.posts = [];
+		this.steramId = uuid(); //create a UUID
+        this._create(this.streamId, this.streamName, this.userId, callback, args)
+    }
 }
 
 Stream.prototype = {
-    _create: function(streamId, streamName, userId, callback, args) {
-
+	_create: function(streamId, streamName, userId, callback, args) {
         var query = "INSERT INTO stream (stream_id, stream_name, user_id, timestamp) VALUES (?,?,?,?)";
         var db = new sqlite.Database();
 
@@ -22,12 +37,13 @@ Stream.prototype = {
             }
             db.execute(query, [streamId, streamName, userId, (new Date()).getTime()], function(error, rows) {
                 if (error) throw error;
-                callback(streamId, args);
+                callback(self, args);
             });
         });
     },
 
-    _findByStreamId: function(streamId, callback, args) {
+
+    _load: function(streamId, callback, args) {
         var query = "SELECT stream_id, stream_name, user_id, timestamp FROM stream WHERE " + 
             "stream_id = ?";
 
@@ -50,12 +66,10 @@ Stream.prototype = {
 						callback(null);
 					}else{
 	                    res = rows[0];
-						result = new Object();
-						result.streamId = res.stream_id;
-	                    result.streamName = res.stream_name;
-	                    result.userId = res.user_id;
-						result.timestamp = res.timestamp;
-						callback(result, args);
+						self.streamId = res.stream_id;
+	                    self.streamName = res.stream_name;
+	                    self.userId = res.user_id;
+						callback(self, args);
 					}
                 }
             });
@@ -93,7 +107,7 @@ Stream.prototype = {
 							r.timestamp = res.timestamp;
 							result.push(r);
 						}
-						callback(result, args);
+						callback(self, args);
 					}
                 }
             });
@@ -127,12 +141,6 @@ Stream.prototype = {
     },*/
 }
 
-//not really used
-Stream.prototype.findByStreamId = function(streamId, callback, args){
-	this._findByStreamId(streamId, function(result){
-		callback(result);
-	});
-};
 
 //add a post to a stream
 Stream.prototype.addPost = function(streamId, userId, data, callback, args) {
