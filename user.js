@@ -6,8 +6,21 @@ var sys    = require('sys'),
     _ = require('underscore'),
 	uuid = require('node-uuid');
 
-function User() {
-
+function User(load) {
+	if (load) {
+        this.userId = arguments[1];
+		this.password = arguments[2];
+        var callback   = arguments[3];
+        var args       = arguments[4];
+        // load from db
+        this._login(this.userId, this.password, callback, args);
+    } else {
+        this.userId = arguments[1];
+        this.password     = arguments[2];
+        var callback   = arguments[3];
+        var args       = arguments[4];
+        this._create(this.userId, this.password, callback, args)
+    }
 }
 
 User.prototype._create = function(userId, password, callback, args) {
@@ -26,7 +39,7 @@ User.prototype._create = function(userId, password, callback, args) {
 				//not exist, create new user
 		        db.execute(query, [userId, password], function(error) {
 		            if (error) throw error;
-					callback(true);
+					callback(self);
 		        });
 			}else{
 				callback(false);
@@ -85,18 +98,6 @@ User.prototype._login = function(userId, password, callback, args) {
             }
         });
     });
-};
-
-User.prototype.login = function(userId, password, callback, args){
-	this._login(userId, password, function(result){
-		callback(result);
-	});
-};
-
-User.prototype.createNewUser = function(userId, password, callback, args){
-	this._create(userId, password, function(result){
-		callback(result);
-	});
 };
 
 //a user creates a stream

@@ -1,18 +1,26 @@
 var User = require('./user');
-var user = new User();
 
-user.createNewUser("user1","password", function(result){
+//create user
+var user = new User(false, "JL", "pass", function(result){
 	if (result){
-		console.log("create new user successful");
+		console.log("created user successfully");
 	}else{
-		console.log("create new user failed, prob duplicate user_id");
+		console.log("created user failed, duplicate")
 	}
 });
 
-user.login("user1","password", function(result){
+var user = new User(true, "JL", "pass", function(result){
 	if (result){
-		console.log("login successful");
+		console.log("login user successfully");
 	}else{
-		console.log("login failed");
+		console.log("login user failed")
+	}
+});
+
+var user = new User(true, "JL", "failpass", function(result){
+	if (result){
+		console.log("login user successfully");
+	}else{
+		console.log("login user failed")
 	}
 });
