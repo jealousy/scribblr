@@ -1,43 +1,32 @@
 var User = require('./user');
-var Stream = require('./stream');
-
-var user = new User();
-var stream = new Stream();
-
-var userId = "user1";
-var password = "password";
-var streamId;
 
 //login
-user.login(userId,password, function(result){
+var user = new User(true, "JL", "pass", function(result){
 	if (result){
-		console.log("login successful");
-		
-		//add a stream
-		user.addStream("nalinStream",userId, function(result){
-			if (result){
-				console.log("new streamId is: " + result);
-				streamId = result;
+		console.log("login user successfully");
+		//create stream
+		user.createStream("post test", function(streamObj){
+			console.log(user.streams);
+			
+			streamObj.addPost("post1",function(postObj){
+				console.log(postObj);
 				
-				//create a post to stream
-				stream.addPost(streamId, userId, "a testing post", function(result){
-					console.log('new postId is: '+ result);
+				streamObj.addPost("post2",function(postObj){
+					console.log(postObj);
 					
-					//get all posts from a stream
-					stream.getPostsByStreamId(streamId, function(result){
-						console.log("posts from a stream");
-						console.log(result);
+					streamObj.addPost("post3",function(postObj){
+						console.log(postObj);
+						console.log("load all posts");
+						streamObj.loadPosts(function(streamObj){
+							console.log(streamObj.posts);
+						});
 					});
-					
-					//get all posts from a user
-					user.getPostsByUserId(userId, function(result){
-						console.log("posts from a user");
-						console.log(result);
-					});
-				}); 
-			}
+				});
+			});
 		});
 	}else{
-		console.log("login failed");
+		console.log("login user failed")
 	}
 });
+
+

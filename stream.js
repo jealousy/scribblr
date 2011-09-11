@@ -11,6 +11,7 @@ function Stream(load) {
         var callback   = arguments[2];
         var args       = arguments[3];
         // load from db
+		this.posts = [];
         this._load(this.streamId,callback, args);
     } else {
         this.streamName = arguments[1];
@@ -18,8 +19,8 @@ function Stream(load) {
         var callback   = arguments[3];
         var args       = arguments[4];
 
-        //this.posts = [];
-		this.steramId = uuid(); //create a UUID
+        this.posts = [];
+		this.streamId = uuid(); //create a UUID
         this._create(this.streamId, this.streamName, this.userId, callback, args)
     }
 }
@@ -76,6 +77,39 @@ Stream.prototype = {
         });
     },
 
+	_findPostsId: function(streamId, callback, args){
+		var query = "SELECT post_id FROM post WHERE " + 
+	            "stream_id = ?";
+		
+		var db = new sqlite.Database();
+
+        var self = this; // used for context
+        db.open("scribblr.db", function(error) {
+            if (error) {
+                console.log('Error connecting to db');
+                throw error;
+            }
+
+            db.execute(query, [streamId], function(error, rows) {
+                if (error) {
+                    throw error;
+                } else {
+                    //should only return one row
+					if (rows.length == 0)
+					{
+						callback(null);
+					}else{
+						result = new Array();
+						for (i = 0; i < rows.length; i++){
+							result.push(rows[i].post_id);
+						}
+						callback(result, args);
+					}
+                }
+            });
+        });
+	},
+	
 	_findByUserId: function(userId, callback, args) {
         var query = "SELECT stream_id, stream_name, user_id, timestamp FROM stream WHERE " + 
             "user_id = ?";
@@ -113,50 +147,35 @@ Stream.prototype = {
             });
         });
     },
-
-	/* Not fixed yet, not working 
-    _update: function(callback, args) {
-        //this function should write to cache and db
-
-        var query = "UPDATE stream SET posts = ? WHERE stream_id = ?";
-
-        var db = new sqlite.Database();
-
-        var self = this; // used for context
-
-        db.open("scribblr.db", function(error) {
-            if (error) {
-                console.log('Error connecting to db');
-                throw error;
-            }
-
-            db.execute(query, [JSON.stringify(self.posts), self.streamId], function(error, rows) {
-                if (error) throw error;
-
-                console.log('updated');
-                callback(args);
-            });
-        });
-
-    },*/
 }
 
 
 //add a post to a stream
-Stream.prototype.addPost = function(streamId, userId, data, callback, args) {
+Stream.prototype.addPost = function(data, callback, args) {
+	self = this;
     //create the post object
-	var post = new Post();
-	var id = uuid(); //create a UUID
-	post._create(id, streamId, userId, data, function(result){
-		callback(result); //return new postId
+	var post = new Post(false,this.streamId, this.userId, data, function(postObj){
+		self.posts.push(postObj);
+		callback(postObj,args);
 	});
 };
 
 //get posts in a steram
-Stream.prototype.getPostsByStreamId = function(streamId, callback, args){
-	var post = new Post();
-	post._findByStreamId(streamId, function(result){
-		callback(result);
+Stream.prototype.loadPosts = function(callback, args){
+	this.posts = [];
+	self = this;
+	this._findPostsId(this.streamId, function(result){
+		for (i=0; i<result.length; i++){
+			if (i == (result.length -1)){
+				var last = true;
+			}
+			var post = new Post(true, result[i], function(postObj, last){
+				self.posts.push(postObj);	
+				if (last == true){;
+					callback(self,args);
+				}
+			}, last);
+		}
 	});
 };
 

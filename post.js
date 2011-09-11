@@ -1,8 +1,26 @@
 var sys    = require('sys'),
     sqlite = require('sqlite'),
+	uuid = require('node-uuid'),
     _ = require('underscore');
 
-function Post() {
+function Post(load) {
+ 	if (load) {
+        this.postId = arguments[1];
+        var callback = arguments[2];
+        var args = arguments[3];
+        // load from db
+        this._load(this.postId, callback, args);
+    } else {
+        this.streamId = arguments[1];
+		this.userId = arguments[2];
+        this.data = arguments[3];
+        var callback = arguments[4];
+        var args = arguments[5];
+
+        //post id is concatenation of streamName and timestamp
+        this.postId = uuid(); //create a UUID
+        this._create(this.postId, this.streamId, this.userId, this.data, callback, args)
+    }
 }
 
 
@@ -20,7 +38,7 @@ Post.prototype = {
             }
             db.execute(query, [postId, streamId, data, userId, (new Date()).getTime()], function(error) {
                 if (error) throw error;
-                callback(postId, args)
+                callback(self, args)
             });
         });
     },
@@ -49,100 +67,16 @@ Post.prototype = {
 						callback(null);
 					}else{
 	                    res = rows[0];
-						result = new Object();
-						result.streamId = res.stream_id;
-	                    result.postId = res.post_id;
-	                    result.userId = res.user_id;
-						result.data = res.data;
-						result.timestamp = res.timestamp;
-						callback(result, args);
+						self.streamId = res.stream_id;
+	                    self.postId = res.post_id;
+	                    self.userId = res.user_id;
+						self.data = res.data;
+						callback(self, args);
 					}
                 }
             });
         });
     },
-
-	//find all posts in a stream
-	_findByStreamId: function(streamId, callback, args){
-		var query = "SELECT post_id, stream_id, data, user_id, timestamp FROM post WHERE " + 
-	            "stream_id = ?";
-		
-		var db = new sqlite.Database();
-
-        var self = this; // used for context
-        db.open("scribblr.db", function(error) {
-            if (error) {
-                console.log('Error connecting to db');
-                throw error;
-            }
-
-            db.execute(query, [streamId], function(error, rows) {
-                if (error) {
-                    throw error;
-                } else {
-                    //should only return one row
-					if (rows.length == 0)
-					{
-						callback(null);
-					}else{
-						result = new Array();
-						for (i = 0; i < rows.length; i++){
-							res = rows[i];
-							r = new Object();
-							r.postId = res.post_id;
-							r.streamId = res.stream_id;
-		                    r.data = res.data;
-		                    r.userId = res.user_id;
-							r.timestamp = res.timestamp;
-							result.push(r);
-						}
-						callback(result, args);
-					}
-                }
-            });
-        });
-	},
-	
-	//find all posts created by a user
-	_findByUserId: function(userId, callback, args){
-		var query = "SELECT post_id, stream_id, data, user_id, timestamp FROM post WHERE " + 
-	            "user_id = ?";
-		
-		var db = new sqlite.Database();
-
-        var self = this; // used for context
-        db.open("scribblr.db", function(error) {
-            if (error) {
-                console.log('Error connecting to db');
-                throw error;
-            }
-
-            db.execute(query, [userId], function(error, rows) {
-                if (error) {
-                    throw error;
-                } else {
-                    //should only return one row
-					if (rows.length == 0)
-					{
-						callback(null);
-					}else{
-						result = new Array();
-						for (i = 0; i < rows.length; i++){
-							res = rows[i];
-							r = new Object();
-							r.postId = res.post_id;
-							r.streamId = res.stream_id;
-		                    r.data = res.data;
-		                    r.userId = res.user_id;
-							r.timestamp = res.timestamp;
-							result.push(r);
-						}
-						callback(result, args);
-					}
-                }
-            });
-        });
-	},
 };
 
 module.exports = Post;
