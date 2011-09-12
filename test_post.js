@@ -16,6 +16,8 @@ var user = new User(true, "JL", "pass", function(result){
 					
 					streamObj.addPost("post3",function(postObj){
 						console.log(postObj);
+						
+						//load all posts
 						console.log("load all posts");
 						streamObj.loadPosts(function(streamObj){
 							console.log(streamObj.posts);

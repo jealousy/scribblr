@@ -109,44 +109,6 @@ Stream.prototype = {
             });
         });
 	},
-	
-	_findByUserId: function(userId, callback, args) {
-        var query = "SELECT stream_id, stream_name, user_id, timestamp FROM stream WHERE " + 
-            "user_id = ?";
-
-        var db = new sqlite.Database();
-
-        var self = this; // used for context
-        db.open("scribblr.db", function(error) {
-            if (error) {
-                console.log('Error connecting to db');
-                throw error;
-            }
-
-            db.execute(query, [userId], function(error, rows) {
-                if (error) {
-                    throw error;
-                } else {
-					if (rows.length == 0)
-					{
-						callback(null);
-					}else{
-						result = new Array();
-						for (i = 0; i < rows.length; i++){
-							res = rows[i];
-							r = new Object();
-							r.streamId = res.stream_id;
-		                    r.streamName = res.stream_name;
-		                    r.userId = res.user_id;
-							r.timestamp = res.timestamp;
-							result.push(r);
-						}
-						callback(self, args);
-					}
-                }
-            });
-        });
-    },
 }
 
 

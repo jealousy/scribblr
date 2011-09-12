@@ -8,7 +8,8 @@ function User(load) {
 	if (load) {
         this.userId = arguments[1];
 		this.password = arguments[2];
-		this.streams = [];
+		this.ownStreams = [];
+		this.subStreams = [];
         var callback   = arguments[3];
         var args       = arguments[4];
         // load from db
@@ -16,7 +17,8 @@ function User(load) {
     } else {
         this.userId = arguments[1];
         this.password     = arguments[2];
-		this.streams = [];
+		this.ownStreams = [];
+		this.subStreams = [];
         var callback   = arguments[3];
         var args       = arguments[4];
         this._create(this.userId, this.password, callback, args);
@@ -100,39 +102,76 @@ User.prototype._login = function(userId, password, callback, args) {
     });
 };
 
+	
+User.prototype._findOwnStreamsId = function(userId, callback, args) {
+    var query = "SELECT stream_id FROM stream WHERE " + 
+        "user_id = ?";
+
+    var db = new sqlite.Database();
+
+    var self = this; // used for context
+    db.open("scribblr.db", function(error) {
+        if (error) {
+            console.log('Error connecting to db');
+            throw error;
+        }
+
+        db.execute(query, [userId], function(error, rows) {
+            if (error) {
+                throw error;
+            } else {
+				if (rows.length == 0)
+				{
+					callback(null);
+				}else{
+					result = new Array();
+					for (i = 0; i < rows.length; i++){
+						res = rows[i];
+						result.push(res.stream_id);
+					}
+					callback(result, args);
+				}
+            }
+        });
+    });
+};
+
 //a user creates a stream
 User.prototype.createStream = function(streamName,callback, args){
 	self = this;
 	var stream = new Stream(false, streamName, this.userId, function(streamObj){
-		self.streams.push(streamObj);
+		self.ownStreams.push(streamObj);
 		callback(streamObj, args);
 	});
 };
 
 //get all streams created by a user
 User.prototype.loadOwnStreams = function(callback, args){
-	var stream = new Stream();
-	stream._findByUserId(userId, function(result){
-		callback(result);
+	this.ownStreams = [];
+	self = this;
+	this._findOwnStreamsId(this.userId, function(result){
+		for (i=0; i<result.length; i++){
+			if (i == (result.length -1)){
+				var last = true;
+			}
+			var stream = new Stream(true, result[i], function(streamObj, last){
+				self.ownStreams.push(streamObj);	
+				if (last == true){;
+					callback(self,args);
+				}
+			}, last);
+		}
 	});
 };
 
 //get all streams id subscribe by user
-User.prototype.loadSubscribedStreams = function(callback, args){
+User.prototype.loadSubStreams = function(callback, args){
 	var subs = new Subs();
 	subs._findSubsByUserId(userId,function(result){
 		callback(result);
 	});
 };
 
-/*
-//get all posts created by a user
-User.prototype.getPostsByUserId = function(userId, callback, args){
-	var post = new Post();
-	post._findByUserId(userId, function(result){
-		callback(result);
-	});
-};
 
 //subscribe to a stream
 User.prototype.subscribeStream = function(streamId, userId, callback, args){
@@ -140,7 +179,7 @@ User.prototype.subscribeStream = function(streamId, userId, callback, args){
 	subs._create(streamId, userId, function(result){
 		callback(result); //return new subscriptionId
 	});
-};*/
+};
 
 
 

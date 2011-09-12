@@ -12,6 +12,11 @@ var user = new User(true, "JL", "pass", function(result){
 //create stream
 user.createStream("wutup", function(result){
 	console.log(user.streams);
+	
+	user.loadOwnStreams(function(userObj){
+		console.log("Own streams");
+		console.log(userObj.ownStreams);
+	});
 });
 
 
