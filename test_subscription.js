@@ -1,39 +1,27 @@
 var User = require('./user');
-var Stream = require('./stream');
 
-var user = new User();
-var stream = new Stream();	
 
-var userId = "user1";
-var password = "password";
-var streamId;
+//create user
+var newuser = new User(false, "JL22", "pass", function(result){
+	if (result){
+		console.log("created user successfully");
+	}else{
+		console.log("created user failed, duplicate")
+	}
+});
 
 //login
-user.login(userId,password, function(result){
+var user = new User(true, "JL22", "pass", function(result){
 	if (result){
-		console.log("login successful");
+		console.log("login user successfully");
 		
-		//add a stream
-		user.addStream("nalinStream",userId, function(result){
-			if (result){
-				console.log("new streamId is: " + result);
-				streamId = result;
-				
-				//get subscription of a user
-				user.getSubscriptions(userId,function(result){
-					console.log("user subscribed to streams: ");
-					console.log(result);
-				});
-				
-				//subscribe to same stream twice, should return error
-				user.subscribeStream(streamId, userId, function(result){
-					if (!result){
-						console.log("fail to subscribe to stream, prob duplicate");
-					}
-				});
-			}
+		user.subscribeStream('11e42f5b-643a-425e-bb1b-c216e396e2aa', function(result){
+			console.log("current subscriptions");
+			user.loadSubStreams(function(result){
+				console.log(user.subStreams);
+			});
 		});
 	}else{
-		console.log("login failed");
+		console.log("login user failed")
 	}
 });

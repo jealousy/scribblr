@@ -10,6 +10,7 @@ function User(load) {
 		this.password = arguments[2];
 		this.ownStreams = [];
 		this.subStreams = [];
+		this.subscriptions = [];
         var callback   = arguments[3];
         var args       = arguments[4];
         // load from db
@@ -19,6 +20,7 @@ function User(load) {
         this.password     = arguments[2];
 		this.ownStreams = [];
 		this.subStreams = [];
+		this.subscriptions = [];
         var callback   = arguments[3];
         var args       = arguments[4];
         this._create(this.userId, this.password, callback, args);
@@ -77,7 +79,7 @@ User.prototype._exist = function(userId, callback, args) {
 };
 
 User.prototype._login = function(userId, password, callback, args) {
-    var query = "SELECT user_id, password FROM user WHERE " + 
+    var query = "SELECT user_id, password, subscriptions FROM user WHERE " + 
         "user_id = ? AND password = ?";
 
     var db = new sqlite.Database();
@@ -95,6 +97,11 @@ User.prototype._login = function(userId, password, callback, args) {
 				if (rows.length == 0){
 					callback(false);
 				}else{
+					self.subscriptions = JSON.parse(rows[0].subscriptions);
+					if (self.subscriptions == null)
+					{
+						self.subscriptions = [];
+					}
 					callback(true);
 				}
             }
@@ -136,6 +143,26 @@ User.prototype._findOwnStreamsId = function(userId, callback, args) {
     });
 };
 
+User.prototype._updateSubscription = function(callback, args){
+	var query = "UPDATE user SET subscriptions = ? WHERE user_id = ?";
+
+    var db = new sqlite.Database();
+
+    var self = this; // used for context
+
+    db.open("scribblr.db", function(error) {
+        if (error) {
+            console.log('Error connecting to db');
+            throw error;
+        }
+
+        db.execute(query, [JSON.stringify(self.subscriptions), self.userId], function(error, rows) {
+            if (error) throw error;
+            callback(self, args);
+        });
+    });
+}
+
 //a user creates a stream
 User.prototype.createStream = function(streamName,callback, args){
 	self = this;
@@ -164,20 +191,29 @@ User.prototype.loadOwnStreams = function(callback, args){
 	});
 };
 
-//get all streams id subscribe by user
+//get all streams subscribed by user
 User.prototype.loadSubStreams = function(callback, args){
-	var subs = new Subs();
-	subs._findSubsByUserId(userId,function(result){
-		callback(result);
-	});
+	this.subStreams = [];
+	self = this;
+	for (i=0; i<this.subscriptions.length; i++){
+		if (i == (this.subscriptions.length -1)){
+			var last = true;
+		}
+		var stream = new Stream(true,this.subscriptions[i], function(streamObj, last){
+			self.subStreams.push(streamObj);	
+			if (last == true){;
+				callback(self,args);
+			}
+		}, last);
+	}
 };
 
 
 //subscribe to a stream
-User.prototype.subscribeStream = function(streamId, userId, callback, args){
-	var subs = new Subs();
-	subs._create(streamId, userId, function(result){
-		callback(result); //return new subscriptionId
+User.prototype.subscribeStream = function(streamId, callback, args){
+	this.subscriptions.push(streamId);
+	this._updateSubscription(function(result){
+		callback(result);
 	});
 };
 
